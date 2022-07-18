@@ -5,11 +5,8 @@ import (
 	"errors"
 	"fmt"
 	hellopb "github.com/takapi327/grpc-tutorial/pkg/grpc"
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"net"
@@ -25,7 +22,9 @@ func main() {
 		panic(err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(myUnaryServerInterceptor1),
+	)
 
 	hellopb.RegisterGreetingServiceServer(s, NewMyServer())
 
@@ -48,15 +47,15 @@ type myServer struct {
 }
 
 func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
-	//return &hellopb.HelloResponse{
-	//	Message: fmt.Sprintf("Hello, %s!", req.GetName()),
-	//}, nil
-	stat := status.New(codes.Unknown, "unknown error occurred")
-	stat, _ = stat.WithDetails(&errdetails.DebugInfo{
-		Detail: "detail reaseon of err",
-	})
-	err := stat.Err()
-	return nil, err
+	return &hellopb.HelloResponse{
+		Message: fmt.Sprintf("Hello, %s!", req.GetName()),
+	}, nil
+	//stat := status.New(codes.Unknown, "unknown error occurred")
+	//stat, _ = stat.WithDetails(&errdetails.DebugInfo{
+	//	Detail: "detail reaseon of err",
+	//})
+	//err := stat.Err()
+	//return nil, err
 }
 
 func (s *myServer) HelloServerStream(req *hellopb.HelloRequest, stream hellopb.GreetingService_HelloServerStreamServer) error {
