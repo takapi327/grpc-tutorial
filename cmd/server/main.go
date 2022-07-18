@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	hellopb "github.com/takapi327/grpc-tutorial/pkg/grpc"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -18,6 +20,8 @@ func main() {
 
 	s := grpc.NewServer()
 
+	hellopb.RegisterGreetingServiceServer(s, NewMyServer())
+
 	go func() {
 		log.Printf("start gRPC server port: %v", port)
 		s.Serve(listener)
@@ -28,4 +32,18 @@ func main() {
 	<-quit
 	log.Println("stopping gRPC server...")
 	s.GracefulStop()
+}
+
+type myServer struct {
+	hellopb.UnimplementedGreetingServiceServer
+}
+
+func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
+	return &hellopb.HelloResponse{
+		Message: fmt.Sprintf("Hello, %s!", req.GetName()),
+	}, nil
+}
+
+func NewMyServer() *myServer {
+	return &myServer{}
 }
